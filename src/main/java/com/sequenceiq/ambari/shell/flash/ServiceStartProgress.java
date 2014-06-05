@@ -17,40 +17,39 @@
  */
 package com.sequenceiq.ambari.shell.flash;
 
-import java.util.concurrent.ExecutorService;
+import static org.apache.commons.lang.StringUtils.rightPad;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.core.JLineShellComponent;
-import org.springframework.stereotype.Service;
 
 import com.sequenceiq.ambari.client.AmbariClient;
 
-/**
- * Service for managing the flashes.
- */
-@Service
-public class FlashService {
+public class ServiceStartProgress extends AbstractFlash {
 
+  private static final int ROLL_COUNT = 4;
+  private volatile int counter = 1;
+  private volatile boolean started;
   private AmbariClient client;
-  private JLineShellComponent shell;
-  private ExecutorService executorService;
 
-  @Autowired
-  public FlashService(AmbariClient client, JLineShellComponent shell, ExecutorService executorService) {
+  public ServiceStartProgress(JLineShellComponent shell, AmbariClient client) {
+    super(shell, FlashType.SERVICE_START);
     this.client = client;
-    this.shell = shell;
-    this.executorService = executorService;
   }
 
-  public void showInstallProgress() {
-    executorService.submit(new InstallProgress(shell, client));
-  }
-
-  public void showServiceStopProgress() {
-    executorService.submit(new ServiceStopProgress(shell, client));
-  }
-
-  public void showServiceStartProgress() {
-    executorService.submit(new ServiceStartProgress(shell, client));
+  @Override
+  public String getText() {
+    int dotCount = counter++ % ROLL_COUNT;
+    if (counter == ROLL_COUNT) {
+      counter = 1;
+    }
+    String message;
+    if (!client.servicesStarted()) {
+      message = rightPad("STARTING", 8 + dotCount, ".");
+    } else if (!started) {
+      message = "STARTED";
+      started = true;
+    } else {
+      message = "";
+    }
+    return message;
   }
 }

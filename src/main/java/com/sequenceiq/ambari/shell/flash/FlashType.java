@@ -25,7 +25,9 @@ public enum FlashType {
   /**
    * Install progress percentage flash.
    */
-  INSTALL("install");
+  INSTALL("install"),
+  SERVICE_STOP("stopping"),
+  SERVICE_START("starting");
 
   private String name;
 
